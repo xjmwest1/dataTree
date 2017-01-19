@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+    <script src="data-tree.js"></script>
+    
+    <style>
+        
+    </style>
+</head>
+<body>
+
+    <div ng-app="app" ng-controller="controller as vm">
+        <h1>JSON</h1>
+        <data-tree object="vm.jsonObject" start-expanded="'true'" root-name="'root'"></data-tree>
+        
+        <h1>XML</h1>
+        <data-tree object="vm.xmlObject" start-expanded="'true'" root-name="'root'"></data-tree>
+    </div>
+
+    <script>
+        angular.module('app', ['data-tree'])
+            .controller('controller', controller);
+        
+        function controller() {
+            var vm = this;
+            
+            vm.jsonObject = {
+                a: 1,
+                b: 2,
+                c: [1, 2, 3]
+            };
+            
+            var xmlString = "<note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Don't forget me this weekend!</body></note>";
+            var parser = new DOMParser();
+            vm.xmlObject = parser.parseFromString(xmlString, "text/xml");
+        }
+        
+    
+    </script>
+</body>
+</html>
