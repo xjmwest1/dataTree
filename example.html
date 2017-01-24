@@ -12,10 +12,10 @@
 
     <div ng-app="app" ng-controller="controller as vm">
         <h1>JSON</h1>
-        <data-tree object="vm.jsonObject" start-expanded="'true'" root-name="'root'"></data-tree>
+        <data-tree object="vm.jsonObject" start-expanded="'true'" json-root="'root'" ></data-tree>
         
         <h1>XML</h1>
-        <data-tree object="vm.xmlObject" start-expanded="'true'" root-name="'root'"></data-tree>
+        <data-tree object="vm.xmlObject" start-expanded="'true'" xml-root="'Response'"></data-tree>
     </div>
 
     <script>
