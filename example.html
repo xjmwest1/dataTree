@@ -1,40 +1,155 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
-    <script src="data-tree.js"></script>
-    
-    <style>
-        
-    </style>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="angular-bootstrap-colorpicker-master/colorpicker.min.css">
+	<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+	<script src="angular-bootstrap-colorpicker-master/bootstrap-colorpicker-module.min.js"></script>
+	<script src="data-tree.js"></script>
 </head>
 <body>
+	<div class="container" ng-app="app" ng-controller="controller as vm">
+		
+		<div class="row mt-2 mb-5 text-center">
+			<h1 class="col display-4">Angular Data Tree</h1>
+		</div>
+		<div class="row">
+			<div class="col-6">
+				<div class="container">
+					<div class="form-group row">
+						<label class="col-4">Arrow Color</label>
+						<input colorpicker type="text" class="form-control col-8 colorpicker-component" ng-model="vm.styles.arrow.color" />
+					</div>
+					<div class="form-group row">
+						<label class="col-4">Key Color</label>
+    					<input colorpicker type="text" class="form-control col-8 colorpicker-component" ng-model="vm.styles.key.color" />
+					</div>
+					<div class="form-group row">
+						<label class="col-4">Value Color</label>
+						<input colorpicker type="text" class="form-control col-8 colorpicker-component" ng-model="vm.styles.value.color" />
+					</div>
+					
+					<div class="form-group row">
+						<label class="col-4">JSON Object</label>
+						<textarea class="form-control col-8" ng-model="vm.newObject" rows="10"></textarea>
+					</div>
+					<div class="row justify-content-end">
+						<div class="alert alert-danger col-8" ng-show="vm.error">{{vm.error}}</div>
+					</div>
+					
+					<div class="row justify-content-end">
+						<button ng-click="vm.generateXml()" class="btn btn-secondary mr-2">Generate XML</button>
+						<button ng-click="vm.generateJson()" class="btn btn-secondary mr-2">Generate JSON</button>
+						<button ng-click="vm.updateObject()" class="btn btn-secondary">Update JSON Object</button>
+					</div>
 
-    <div ng-app="app" ng-controller="controller as vm">
-        <h1>JSON</h1>
-        <data-tree object="vm.jsonObject" start-expanded="'true'" json-root="'root'" ></data-tree>
-        
-        <h1>XML</h1>
-        <data-tree object="vm.xmlObject" start-expanded="'true'" xml-root="'Response'"></data-tree>
+				</div>
+				
+					
+				
+			</div>
+			<div class="col-6">
+				<div class="card">
+					<data-tree object="vm.jsonObject" styles="vm.styles"></data-tree>
+				</div>
+			</div>
+		</div>
+		
+				
+			
+				
     </div>
 
-    <script>
-        angular.module('app', ['data-tree'])
+    <script>			
+        angular.module('app', ['data-tree', 'colorpicker.module'])
             .controller('controller', controller);
         
-        function controller() {
-            var vm = this;
-            
-            vm.jsonObject = {
-                a: 1,
-                b: 2,
-                c: [1, 2, 3]
-            };
-            
-            var xmlString = "<note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Don't forget me this weekend!</body></note>";
-            var parser = new DOMParser();
-            vm.xmlObject = parser.parseFromString(xmlString, "text/xml");
+				controller.$inject = ['$http', '$rootScope', '$parse'];
+			
+        function controller($http, $rootScope, $parse) {
+					var vm = this;
+
+					vm.jsonObject = {
+							a: 1,
+							b: 2,
+							c: [1, 2, 3]
+					};
+					vm.newObject = JSON.stringify(vm.jsonObject, null, 4);
+
+					vm.styles = {
+						key: {
+							color: null
+						},
+						value: {
+							color: null
+						},
+						arrow: {
+							color: null
+						}
+					}
+
+					var xmlString = "<note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Don't forget me this weekend!</body></note>";
+					var parser = new DOMParser();
+					vm.xmlObject = parser.parseFromString(xmlString, "text/xml");
+
+					vm.updateObject = function() {
+						vm.error = null;
+						
+						// try JSON first
+						var parsedNew;
+						try{
+							parsedNew = JSON.parse(vm.newObject);
+							vm.jsonObject = parsedNew;
+						}catch(err) {
+							
+							parsedNew = new DOMParser().parseFromString(vm.newObject,"text/xml");
+							if(isParseError(parsedNew)) {
+								vm.error = "not a valid JSON/XML object!";
+							}else {
+								vm.jsonObject = parsedNew;
+							}
+						}
+
+					}
+					
+					vm.generateJson = function() {
+						$http.get('https://jsonplaceholder.typicode.com/posts').then(function(results) {
+							vm.newObject = JSON.stringify(results.data, null, 4);
+							vm.jsonObject = results.data;
+						});
+					}
+					
+					vm.generateXml = function() {
+						var xml = `<note>
+	<to>Tove</to>
+	<from>Jani</from>
+	<heading>Reminder</heading>
+	<body>Don't forget me this weekend!</body>
+</note>`
+						
+						vm.newObject = xml;
+						vm.jsonObject = new DOMParser().parseFromString(xmlString, "text/xml");
+					}
+					
+					function isParseError(parsedDocument) {
+						// parser and parsererrorNS could be cached on startup for efficiency
+						var parser = new DOMParser(),
+							errorneousParse = parser.parseFromString('<', 'text/xml'),
+							parsererrorNS = errorneousParse.getElementsByTagName("parsererror")[0].namespaceURI;
+
+						if (parsererrorNS === 'http://www.w3.org/1999/xhtml') {
+							// In PhantomJS the parseerror element doesn't seem to have a special namespace, so we are just guessing here :(
+							return parsedDocument.getElementsByTagName("parsererror").length > 0;
+						}
+
+						return parsedDocument.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0;
+					};
+
         }
+
         
     
     </script>
